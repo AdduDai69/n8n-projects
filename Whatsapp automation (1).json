@@ -1,0 +1,584 @@
+{
+  "name": "Whatsapp automation",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Receive Whatsapp messages').item.json.body.Body }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a support ticket assistant.\n\nAnalyze the user's issue and respond ONLY in valid JSON.\n\nFormat:\n\n{\n  \"category\": \"...\",\n  \"steps\": \"1)...\\n2)...\\n3)...\",\n  \"status\": \"...\"\n}\n\nRules:\n- Do NOT add explanations\n- Do NOT add extra text\n- Do NOT use markdown\n- Output ONLY JSON\n\nUser issue: {{ $('Receive Whatsapp messages').item.json.body.Body }}\n"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        256,
+        -224
+      ],
+      "id": "119333ba-79b4-47b7-a6a8-c7630118aab2",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-3.5-turbo",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        352,
+        16
+      ],
+      "id": "a35e7053-8d21-4035-ab04-2728c022605e",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "BRzvDDOu3Ro7OXXb",
+          "name": "OpenRouter account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1_VVaYpCGEZCLHSW4noqecPGZqz1Ct4hMS-xcLMtglqg",
+          "mode": "list",
+          "cachedResultName": "AI support logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_VVaYpCGEZCLHSW4noqecPGZqz1Ct4hMS-xcLMtglqg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_VVaYpCGEZCLHSW4noqecPGZqz1Ct4hMS-xcLMtglqg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Issue",
+              "lookupValue": "={{ $json.body.Body }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -112,
+        -192
+      ],
+      "id": "bf292b8e-3f71-450b-a602-fafa7cfadb97",
+      "name": "Get row(s) in sheet",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nnAWxoNlhp3EIFDH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "61f40b3d-fee1-4a7d-8502-9ffd19b95c72",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -608,
+        -112
+      ],
+      "id": "e91925b9-9e15-4994-b825-068888bbf457",
+      "name": "Receive Whatsapp messages",
+      "webhookId": "61f40b3d-fee1-4a7d-8502-9ffd19b95c72"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Response>\n  <Message>\nTicket ID: {{ $json['Ticket Id'] }}\n\nCategory: {{ $json.Category }}\n\nSteps:-\n{{ $json['AI Solution'] }}\n\nStatus: {{ $json.Status }}\n  </Message>\n</Response>\n",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/xml"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1328,
+        -336
+      ],
+      "id": "6ade8b68-945a-43b3-a7e4-225573a7334e",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $json.text;\n\n// Parse LLM JSON\nconst data = JSON.parse(text);\n\nreturn [{\n  json: {\n    category: data.category,\n    steps: data.steps,\n    status: data.status\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -192
+      ],
+      "id": "8b916e06-19db-46e2-99fa-204da10d3e1a",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1_VVaYpCGEZCLHSW4noqecPGZqz1Ct4hMS-xcLMtglqg",
+          "mode": "list",
+          "cachedResultName": "AI support logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_VVaYpCGEZCLHSW4noqecPGZqz1Ct4hMS-xcLMtglqg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_VVaYpCGEZCLHSW4noqecPGZqz1Ct4hMS-xcLMtglqg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "User": "=A.T.",
+            "Time": "={{ $now }}",
+            "Issue": "={{ $node[\"Receive Whatsapp messages\"].json.body.Body }}\n",
+            "Category": "={{ $json.category }}",
+            "AI Solution": "={{ $json.steps }}",
+            "Status": "={{ $json.status }}",
+            "Ticket Id": "={{ $json.ticketId }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Time",
+              "displayName": "Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "User",
+              "displayName": "User",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Issue",
+              "displayName": "Issue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Category",
+              "displayName": "Category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "AI Solution",
+              "displayName": "AI Solution",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Ticket Id",
+              "displayName": "Ticket Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1088,
+        -192
+      ],
+      "id": "ae330305-ec7e-4f62-a9cb-e78d6b721d4d",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nnAWxoNlhp3EIFDH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ba8afa2b-678f-41fb-a5f5-903e3ca47b06",
+              "leftValue": "={{ $json.body.Body.trim().toLowerCase().startsWith('/status') }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -384,
+        -208
+      ],
+      "id": "78f91acf-d549-4d55-98fb-924500554107",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $json.body.Body.trim();   // \"/status 13213\"\nconst parts = msg.split(\" \");\n\nconst ticketId = parts[1];   // \"13213\"\n\nreturn [{\n  json: {\n    ticketId\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -48,
+        -432
+      ],
+      "id": "282cf454-e580-4f37-8e74-01112dfdf4fe",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const id = Math.floor(100000 + Math.random() * 900000);\n\nreturn [{\n  json: {\n    ...$json,\n    ticketId: id\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        -160
+      ],
+      "id": "c8046f42-79d2-4048-8f8e-e0a252678624",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "=<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<Response>\n  <Message>\n{{ $json.text }}\n  </Message>\n</Response>\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        832,
+        -576
+      ],
+      "id": "d285142b-f796-4c7c-9ee5-ae56e20e71e0",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1_VVaYpCGEZCLHSW4noqecPGZqz1Ct4hMS-xcLMtglqg",
+          "mode": "list",
+          "cachedResultName": "AI support logs",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_VVaYpCGEZCLHSW4noqecPGZqz1Ct4hMS-xcLMtglqg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1_VVaYpCGEZCLHSW4noqecPGZqz1Ct4hMS-xcLMtglqg/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Ticket Id",
+              "lookupValue": "={{ $json.ticketId }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        208,
+        -544
+      ],
+      "id": "d4222c30-f442-4c65-b775-5e39bf889836",
+      "name": "Get row(s) in sheet1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "nnAWxoNlhp3EIFDH",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Receive Whatsapp messages').item.json.body.Body }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=You are a Review Based AI\n\nyou will check the ticket id {{ $json['Ticket Id'] }} provided in google sheets and send an apropriate response in the following manner:\nTicket Id: {{ $json['Ticket Id'] }}\n\nCategory: {{ $json.Category }}\n\nStatus: Resolved\n\nand after this give a brief explaination of 1-2 lines of the what the solution and the issue was."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        -592
+      ],
+      "id": "9384f8f8-a564-439e-8833-f6f7dfacd69e",
+      "name": "Basic LLM Chain1"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-3.5-turbo",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        544,
+        -384
+      ],
+      "id": "79ef55a6-de1a-4538-818b-eda2bf284105",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "BRzvDDOu3Ro7OXXb",
+          "name": "OpenRouter account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Receive Whatsapp messages": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "bfbb2977-df7a-462d-bcd5-8359fc96298f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "19f6618666efaf8afd3dc020583e682d22afa0fbafd711ae7b89779d16617864"
+  },
+  "id": "k1N_ygmRcRMY-MMFP7Yx5",
+  "tags": []
+}
